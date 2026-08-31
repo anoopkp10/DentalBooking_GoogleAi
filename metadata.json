@@ -1,0 +1,6 @@
+{
+  "name": "Lumina Dental Clinic",
+  "description": "A premium modern dental clinic website with real appointment booking and an administrative dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
