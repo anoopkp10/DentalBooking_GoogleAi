@@ -50,11 +50,23 @@ export const BusinessHoursTab: React.FC<BusinessHoursTabProps> = ({
   const handleSaveRow = async (bh: BusinessHours) => {
     setSavingId(bh.id);
     try {
+      const startTime = typeof bh.start_time === 'string' && bh.start_time ? bh.start_time : '08:00:00';
+      const endTime = typeof bh.end_time === 'string' && bh.end_time ? bh.end_time : '17:00:00';
+
       await onUpdateBusinessHour(bh.id, {
         is_open: bh.is_open,
-        start_time: bh.start_time,
-        end_time: bh.end_time,
+        start_time: startTime,
+        end_time: endTime,
       });
+
+      setHoursList((prev) =>
+        prev.map((item) =>
+          String(item.id) === String(bh.id)
+            ? { ...item, start_time: startTime, end_time: endTime }
+            : item
+        )
+      );
+
       setSuccessToast(`Saved business hours for ${WEEKDAY_NAMES[bh.weekday]}`);
       setTimeout(() => setSuccessToast(null), 2500);
     } catch (err) {
@@ -62,6 +74,11 @@ export const BusinessHoursTab: React.FC<BusinessHoursTabProps> = ({
     } finally {
       setSavingId(null);
     }
+  };
+
+  const getInputTimeValue = (timeValue?: string | null) => {
+    if (typeof timeValue !== 'string' || !timeValue) return '';
+    return timeValue.slice(0, 5);
   };
 
   return (
@@ -136,7 +153,7 @@ export const BusinessHoursTab: React.FC<BusinessHoursTabProps> = ({
                       <span className="text-xs text-slate-400 font-medium">Opens:</span>
                       <input
                         type="time"
-                        value={bh.start_time.slice(0, 5)}
+                        value={getInputTimeValue(bh.start_time)}
                         onChange={(e) => handleTimeChange(bh.id, 'start_time', e.target.value)}
                         className="p-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 bg-white"
                       />
@@ -148,7 +165,7 @@ export const BusinessHoursTab: React.FC<BusinessHoursTabProps> = ({
                       <span className="text-xs text-slate-400 font-medium">Closes:</span>
                       <input
                         type="time"
-                        value={bh.end_time.slice(0, 5)}
+                        value={getInputTimeValue(bh.end_time)}
                         onChange={(e) => handleTimeChange(bh.id, 'end_time', e.target.value)}
                         className="p-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 bg-white"
                       />

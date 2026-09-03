@@ -257,7 +257,7 @@ export default function App() {
       {/* Fixed Sticky Header */}
       <Navbar
         clinicSettings={clinicSettings}
-        adminUser={adminUser}
+        isAdminLoggedIn={Boolean(adminUser)}
         onAdminClick={() => {
           if (adminUser) {
             setCurrentView('admin');

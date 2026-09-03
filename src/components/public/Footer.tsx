@@ -90,11 +90,15 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="space-y-1.5 text-xs text-slate-300">
               {businessHours.map((bh) => {
                 const dayName = WEEKDAY_NAMES[bh.weekday] || `Day ${bh.weekday}`;
+                const startTime = typeof bh.start_time === 'string' ? bh.start_time.slice(0, 5) : '';
+                const endTime = typeof bh.end_time === 'string' ? bh.end_time.slice(0, 5) : '';
+                const hoursText = bh.is_open && startTime && endTime ? `${startTime} - ${endTime}` : bh.is_open ? 'Hours TBD' : 'Closed';
+
                 return (
                   <div key={bh.id} className="flex items-center justify-between py-0.5 border-b border-slate-800/80">
                     <span className="text-slate-400">{dayName}</span>
                     <span className={bh.is_open ? 'font-medium text-slate-200' : 'text-slate-500 italic'}>
-                      {bh.is_open ? `${bh.start_time.slice(0, 5)} - ${bh.end_time.slice(0, 5)}` : 'Closed'}
+                      {hoursText}
                     </span>
                   </div>
                 );
