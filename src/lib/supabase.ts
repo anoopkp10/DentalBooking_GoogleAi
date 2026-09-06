@@ -487,6 +487,9 @@ export async function updateClinicSettings(updates: Partial<ClinicSettings>): Pr
           clinic_email: updated.clinic_email,
           clinic_phone: updated.clinic_phone,
           clinic_address: updated.clinic_address,
+          facebook_url: updated.facebook_url || null,
+          instagram_url: updated.instagram_url || null,
+          twitter_url: updated.twitter_url || null,
           slot_interval_minutes: updated.slot_interval_minutes,
           booking_notice_hours: updated.booking_notice_hours,
         })
@@ -607,10 +610,17 @@ CREATE TABLE IF NOT EXISTS public.clinic_settings (
   clinic_email TEXT NOT NULL DEFAULT 'care@luminadental.com',
   clinic_phone TEXT NOT NULL DEFAULT '(555) 392-8840',
   clinic_address TEXT NOT NULL DEFAULT '742 Evergreen Medical Way, Suite 300',
+  facebook_url TEXT,
+  instagram_url TEXT,
+  twitter_url TEXT,
   slot_interval_minutes INTEGER NOT NULL DEFAULT 30,
   booking_notice_hours INTEGER NOT NULL DEFAULT 2,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.clinic_settings ADD COLUMN IF NOT EXISTS facebook_url TEXT;
+ALTER TABLE public.clinic_settings ADD COLUMN IF NOT EXISTS instagram_url TEXT;
+ALTER TABLE public.clinic_settings ADD COLUMN IF NOT EXISTS twitter_url TEXT;
 
 -- 6. Admin Users Table (Links to Supabase auth.users.id)
 CREATE TABLE IF NOT EXISTS public.admin_users (

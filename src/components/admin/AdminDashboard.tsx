@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Calendar,
@@ -53,6 +53,20 @@ interface AdminDashboardProps {
 
 export type AdminTab = 'overview' | 'appointments' | 'services' | 'hours' | 'blocked' | 'settings';
 
+const adminPathByTab: Record<AdminTab, string> = {
+  overview: '/admin',
+  appointments: '/admin/appointments',
+  services: '/admin/services',
+  hours: '/admin/business-hours',
+  blocked: '/admin/blocked-dates',
+  settings: '/admin/settings',
+};
+
+const adminTabFromPath = (path: string): AdminTab => {
+  const tab = Object.entries(adminPathByTab).find(([, adminPath]) => adminPath === path)?.[0];
+  return (tab as AdminTab) || 'overview';
+};
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   user,
   appointments,
@@ -73,9 +87,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateClinicSettings,
   onRefreshData,
 }) => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => adminTabFromPath(window.location.pathname));
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isDbModalOpen, setIsDbModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handlePopState = () => setActiveTab(adminTabFromPath(window.location.pathname));
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToTab = (tab: AdminTab) => {
+    window.history.pushState({}, '', adminPathByTab[tab]);
+    setActiveTab(tab);
+    setMobileSidebarOpen(false);
+  };
 
   const pendingCount = appointments.filter((a) => a.status === 'pending').length;
 
@@ -154,10 +180,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <button
                     key={item.id}
                     id={`sidebar-tab-${item.id}`}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setMobileSidebarOpen(false);
-                    }}
+                    onClick={() => navigateToTab(item.id)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-teal-600 text-white shadow-sm font-extrabold'
@@ -238,7 +261,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <OverviewTab
                 appointments={appointments}
                 services={services}
-                onNavigateTab={(tab) => setActiveTab(tab)}
+                onNavigateTab={navigateToTab}
                 onUpdateStatus={onUpdateStatus}
                 onRefresh={onRefreshData}
               />

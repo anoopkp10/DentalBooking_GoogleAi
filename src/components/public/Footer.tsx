@@ -1,24 +1,29 @@
 import React from 'react';
-import { Phone, Mail, MapPin, Clock, ShieldCheck, Heart, ArrowUp } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, ArrowUp, Facebook, Instagram, Twitter, MessageCircle } from 'lucide-react';
 import { ClinicSettings, BusinessHours } from '../../types/database';
 import { WEEKDAY_NAMES } from '../../data/imagery';
 
 interface FooterProps {
   clinicSettings: ClinicSettings;
   businessHours: BusinessHours[];
-  onAdminClick: () => void;
   onBookClick: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   clinicSettings,
   businessHours,
-  onAdminClick,
   onBookClick,
 }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const whatsappNumber = clinicSettings.clinic_phone.replace(/\D/g, '');
+  const socialLinks = [
+    { href: clinicSettings.facebook_url, label: 'Facebook', Icon: Facebook },
+    { href: clinicSettings.instagram_url, label: 'Instagram', Icon: Instagram },
+    { href: clinicSettings.twitter_url, label: 'X / Twitter', Icon: Twitter },
+  ].filter((link) => link.href?.trim());
 
   return (
     <footer className="bg-slate-900 text-slate-300 pt-16 pb-12 border-t border-slate-800">
@@ -52,6 +57,24 @@ export const Footer: React.FC<FooterProps> = ({
                 Schedule Appointment Online
               </button>
             </div>
+
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-2 pt-2" aria-label="Social media links">
+                {socialLinks.map(({ href, label, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={label}
+                    title={label}
+                    className="w-9 h-9 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:border-teal-400 hover:bg-slate-800 flex items-center justify-center transition-colors"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Col 2: Clinic Location & Contact (3 cols) */}
@@ -106,7 +129,7 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
           </div>
 
-          {/* Col 4: Quick Links & Staff Access (2 cols) */}
+          {/* Col 4: Quick Links (2 cols) */}
           <div className="lg:col-span-2 space-y-3.5">
             <h4 className="text-xs font-bold uppercase tracking-wider text-teal-400">
               Navigation
@@ -133,16 +156,6 @@ export const Footer: React.FC<FooterProps> = ({
                   Patient Reviews
                 </a>
               </li>
-              <li className="pt-2">
-                <button
-                  onClick={onAdminClick}
-                  id="footer-staff-login-btn"
-                  className="flex items-center gap-1.5 text-slate-300 hover:text-teal-400 font-semibold cursor-pointer"
-                >
-                  <ShieldCheck className="w-4 h-4 text-teal-400" />
-                  <span>Admin / Staff Portal</span>
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -164,6 +177,19 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
       </div>
+
+      {whatsappNumber && (
+        <a
+          href={`https://wa.me/${whatsappNumber}`}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Chat with ${clinicSettings.clinic_name || 'the clinic'} on WhatsApp`}
+          title="Chat on WhatsApp"
+          className="fixed bottom-5 right-5 z-30 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-xl flex items-center justify-center transition-all hover:scale-105"
+        >
+          <MessageCircle className="w-7 h-7" />
+        </a>
+      )}
     </footer>
   );
 };

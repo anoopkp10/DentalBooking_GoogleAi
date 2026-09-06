@@ -41,8 +41,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminLoginModal } from './components/admin/AdminLoginModal';
 
 export default function App() {
-  // Navigation View: 'public' | 'admin'
-  const [currentView, setCurrentView] = useState<'public' | 'admin'>('public');
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
 
   // Auth State
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -59,6 +58,23 @@ export default function App() {
 
   // Quick pre-selected service when user clicks "Book This Service" on a card
   const [selectedServiceIdForBooking, setSelectedServiceIdForBooking] = useState<string | null>(null);
+
+  const navigate = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthChecking && currentPath.startsWith('/admin') && !adminUser) {
+      setIsAdminModalOpen(true);
+    }
+  }, [adminUser, currentPath, isAuthChecking]);
 
   // Load all initial data
   const loadAllData = useCallback(async () => {
@@ -221,11 +237,11 @@ export default function App() {
       await supabase.auth.signOut();
     }
     setAdminUser(null);
-    setCurrentView('public');
+    navigate('/');
   };
 
   // If in Admin Dashboard view and authenticated
-  if (currentView === 'admin' && adminUser) {
+  if (currentPath.startsWith('/admin') && adminUser) {
     return (
       <AdminDashboard
         user={adminUser}
@@ -235,7 +251,7 @@ export default function App() {
         blockedDates={blockedDates}
         clinicSettings={clinicSettings}
         onLogout={handleAdminLogout}
-        onViewPublicSite={() => setCurrentView('public')}
+        onViewPublicSite={() => navigate('/')}
         onUpdateStatus={handleUpdateStatus}
         onCreateManualAppointment={handleCreateManualAppointment}
         onCreateService={handleCreateService}
@@ -257,14 +273,6 @@ export default function App() {
       {/* Fixed Sticky Header */}
       <Navbar
         clinicSettings={clinicSettings}
-        isAdminLoggedIn={Boolean(adminUser)}
-        onAdminClick={() => {
-          if (adminUser) {
-            setCurrentView('admin');
-          } else {
-            setIsAdminModalOpen(true);
-          }
-        }}
         onBookClick={() => handleScrollToBooking()}
       />
 
@@ -274,18 +282,20 @@ export default function App() {
         <Hero
           clinicSettings={clinicSettings}
           onBookClick={() => handleScrollToBooking()}
+          onExploreServicesClick={() => {
+            document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
 
         {/* Clinical Services with dynamic pricing & duration */}
         <ServicesSection
           services={services}
-          onSelectService={(serviceId) => handleScrollToBooking(serviceId)}
+          isLoading={isLoadingData}
+          onSelectService={(service) => handleScrollToBooking(service.id)}
         />
 
         {/* About Studio & Technology Value Proposition */}
-        <AboutSection
-          onBookClick={() => handleScrollToBooking()}
-        />
+        <AboutSection />
 
         {/* Real-time Multi-step Booking System */}
         <BookingSection
@@ -304,9 +314,7 @@ export default function App() {
         />
 
         {/* Dental Clinicians Team */}
-        <DoctorsTeam
-          onBookWithDoctor={() => handleScrollToBooking()}
-        />
+        <DoctorsTeam />
 
         {/* Patient Testimonials & FAQs */}
         <TestimonialsSection />
@@ -316,23 +324,22 @@ export default function App() {
       <Footer
         clinicSettings={clinicSettings}
         businessHours={businessHours}
-        onAdminClick={() => {
-          if (adminUser) {
-            setCurrentView('admin');
-          } else {
-            setIsAdminModalOpen(true);
-          }
-        }}
         onBookClick={() => handleScrollToBooking()}
       />
 
       {/* Staff Login Modal */}
       <AdminLoginModal
         isOpen={isAdminModalOpen}
-        onClose={() => setIsAdminModalOpen(false)}
+        onClose={() => {
+          setIsAdminModalOpen(false);
+          if (currentPath.startsWith('/admin') && !adminUser) {
+            navigate('/');
+          }
+        }}
         onLoginSuccess={(user) => {
           setAdminUser(user);
-          setCurrentView('admin');
+          setIsAdminModalOpen(false);
+          return loadAllData().then(() => navigate('/admin'));
         }}
       />
 

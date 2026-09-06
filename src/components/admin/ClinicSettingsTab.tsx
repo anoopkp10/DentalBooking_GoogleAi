@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Phone, Mail, MapPin, Clock, Save, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { Building2, Phone, Mail, MapPin, Clock, Save, CheckCircle2, AlertCircle, Facebook, Instagram, Twitter } from 'lucide-react';
 import { ClinicSettings } from '../../types/database';
 
 interface ClinicSettingsTabProps {
@@ -15,6 +15,9 @@ export const ClinicSettingsTab: React.FC<ClinicSettingsTabProps> = ({
   const [clinicEmail, setClinicEmail] = useState(clinicSettings.clinic_email || '');
   const [clinicPhone, setClinicPhone] = useState(clinicSettings.clinic_phone || '');
   const [clinicAddress, setClinicAddress] = useState(clinicSettings.clinic_address || '');
+  const [facebookUrl, setFacebookUrl] = useState(clinicSettings.facebook_url || '');
+  const [instagramUrl, setInstagramUrl] = useState(clinicSettings.instagram_url || '');
+  const [twitterUrl, setTwitterUrl] = useState(clinicSettings.twitter_url || '');
   const [slotInterval, setSlotInterval] = useState(clinicSettings.slot_interval_minutes || 30);
   const [noticeHours, setNoticeHours] = useState(clinicSettings.booking_notice_hours || 2);
 
@@ -28,6 +31,9 @@ export const ClinicSettingsTab: React.FC<ClinicSettingsTabProps> = ({
     setClinicEmail(clinicSettings.clinic_email || '');
     setClinicPhone(clinicSettings.clinic_phone || '');
     setClinicAddress(clinicSettings.clinic_address || '');
+    setFacebookUrl(clinicSettings.facebook_url || '');
+    setInstagramUrl(clinicSettings.instagram_url || '');
+    setTwitterUrl(clinicSettings.twitter_url || '');
     setSlotInterval(clinicSettings.slot_interval_minutes || 30);
     setNoticeHours(clinicSettings.booking_notice_hours || 2);
   }, [clinicSettings]);
@@ -48,6 +54,9 @@ export const ClinicSettingsTab: React.FC<ClinicSettingsTabProps> = ({
         clinic_email: clinicEmail.trim(),
         clinic_phone: clinicPhone.trim(),
         clinic_address: clinicAddress.trim(),
+        facebook_url: facebookUrl.trim(),
+        instagram_url: instagramUrl.trim(),
+        twitter_url: twitterUrl.trim(),
         slot_interval_minutes: Number(slotInterval),
         booking_notice_hours: Number(noticeHours),
       });
@@ -174,7 +183,39 @@ export const ClinicSettingsTab: React.FC<ClinicSettingsTabProps> = ({
           </div>
         </div>
 
-        {/* Section 2: Online Booking Algorithm Parameters */}
+        {/* Section 2: Social Media */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+            <Instagram className="w-5 h-5 text-teal-600" />
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Social Media Links</h3>
+              <p className="text-xs text-slate-500">Optional links displayed as icons in the public footer.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs sm:text-sm">
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase mb-1.5">
+                <Facebook className="w-3.5 h-3.5" /> Facebook
+              </label>
+              <input type="url" id="setting-facebook-url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/..." className="w-full p-3 rounded-xl border border-slate-300 font-medium focus:ring-2 focus:ring-teal-500" />
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase mb-1.5">
+                <Instagram className="w-3.5 h-3.5" /> Instagram
+              </label>
+              <input type="url" id="setting-instagram-url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/..." className="w-full p-3 rounded-xl border border-slate-300 font-medium focus:ring-2 focus:ring-teal-500" />
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase mb-1.5">
+                <Twitter className="w-3.5 h-3.5" /> X / Twitter
+              </label>
+              <input type="url" id="setting-twitter-url" value={twitterUrl} onChange={(e) => setTwitterUrl(e.target.value)} placeholder="https://x.com/..." className="w-full p-3 rounded-xl border border-slate-300 font-medium focus:ring-2 focus:ring-teal-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Online Booking Algorithm Parameters */}
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs space-y-5">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <Clock className="w-5 h-5 text-teal-600" />

@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Phone, Clock, Calendar, ShieldCheck, UserCheck, Menu, X, ChevronRight } from 'lucide-react';
+import { Sparkles, Phone, Clock, Calendar, Menu, X, ChevronRight } from 'lucide-react';
 import { ClinicSettings } from '../../types/database';
 
 interface NavbarProps {
   clinicSettings: ClinicSettings;
   onBookClick: () => void;
-  onAdminClick: () => void;
-  isAdminLoggedIn?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   clinicSettings,
   onBookClick,
-  onAdminClick,
-  isAdminLoggedIn = false,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const displayClinicName = clinicSettings.clinic_name?.trim() || 'Lumina Dental Studio';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,23 +61,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Phone className="w-3.5 h-3.5 mr-1.5 text-teal-400" />
               <span className="font-semibold">{clinicSettings.clinic_phone}</span>
             </a>
-            <button
-              onClick={onAdminClick}
-              id="staff-portal-top-btn"
-              className="hidden sm:inline-flex items-center text-slate-400 hover:text-teal-300 transition-colors text-xs font-medium pl-3 border-l border-slate-700"
-            >
-              {isAdminLoggedIn ? (
-                <span className="flex items-center text-emerald-400">
-                  <UserCheck className="w-3.5 h-3.5 mr-1" />
-                  Admin Portal
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                  Staff Login
-                </span>
-              )}
-            </button>
           </div>
         </div>
       </div>
@@ -110,8 +90,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </svg>
             </div>
             <div>
-              <span className="font-display font-extrabold text-xl tracking-tight text-slate-900 flex items-center gap-1.5">
-                Lumina <span className="text-teal-600 font-semibold text-lg">Dental</span>
+              <span className="font-display font-extrabold text-xl tracking-tight text-slate-900">
+                {displayClinicName}
               </span>
               <p className="text-[11px] tracking-wide text-slate-500 uppercase font-medium">
                 Modern Care & Aesthetics
@@ -131,7 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => scrollToSection('about-section')}
               className="hover:text-teal-600 transition-colors cursor-pointer py-1"
             >
-              Why Lumina
+              Why {displayClinicName}
             </button>
             <button
               onClick={() => scrollToSection('doctors-section')}
@@ -198,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => scrollToSection('about-section')}
                 className="flex items-center justify-between py-2 text-left hover:text-teal-600 border-b border-slate-100"
               >
-                <span>Why Lumina</span>
+                <span>Why {displayClinicName}</span>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </button>
               <button
@@ -232,16 +212,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full py-3 text-center text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-xl"
                 >
                   Schedule Your Visit Online
-                </button>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onAdminClick();
-                  }}
-                  className="w-full py-2.5 text-center text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center gap-2"
-                >
-                  <ShieldCheck className="w-4 h-4 text-teal-600" />
-                  {isAdminLoggedIn ? 'Open Admin Portal' : 'Staff Login'}
                 </button>
               </div>
             </div>

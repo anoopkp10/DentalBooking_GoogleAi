@@ -111,6 +111,9 @@ export const DEFAULT_CLINIC_SETTINGS = {
   clinic_email: "care@luminadental.com",
   clinic_phone: "(555) 392-8840",
   clinic_address: "742 Evergreen Medical Way, Suite 300, Metropolitan City",
+  facebook_url: "",
+  instagram_url: "",
+  twitter_url: "",
   slot_interval_minutes: 30,
   booking_notice_hours: 2,
   created_at: new Date().toISOString()

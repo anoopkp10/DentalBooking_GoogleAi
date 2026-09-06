@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured, checkIsAdmin, registerLocalAdminUser } 
 interface AdminLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: (user: any) => void;
+  onLoginSuccess: (user: any) => void | Promise<void>;
 }
 
 export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
@@ -55,8 +55,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         }
 
         // Allowed access
-        onLoginSuccess(data.user);
-        onClose();
+        await onLoginSuccess(data.user);
       } else {
         // Dev demo authorization fallback when remote Supabase project is not yet configured
         // Enables preview evaluation out-of-the-box
@@ -68,8 +67,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             email: email.trim(),
             user_metadata: { role: 'admin', full_name: 'Clinic Administrator' }
           };
-          onLoginSuccess(demoUser);
-          onClose();
+          await onLoginSuccess(demoUser);
         } else {
           throw new Error('Please enter an admin email and password (at least 4 characters).');
         }

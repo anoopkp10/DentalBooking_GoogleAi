@@ -50,6 +50,9 @@ export interface ClinicSettings {
   clinic_email: string;
   clinic_phone: string;
   clinic_address: string;
+  facebook_url?: string;
+  instagram_url?: string;
+  twitter_url?: string;
   slot_interval_minutes: number;
   booking_notice_hours: number;
   created_at?: string;
