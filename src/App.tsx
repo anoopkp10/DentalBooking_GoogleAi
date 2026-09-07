@@ -71,6 +71,37 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (currentPath.startsWith('/admin')) {
+      return;
+    }
+
+    const existingSchema = document.getElementById('clinic-schema');
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Dentist',
+      name: clinicSettings.clinic_name,
+      telephone: clinicSettings.clinic_phone,
+      email: clinicSettings.clinic_email,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: clinicSettings.clinic_address,
+      },
+      url: window.location.origin,
+    };
+
+    if (existingSchema) {
+      existingSchema.textContent = JSON.stringify(schema);
+      return;
+    }
+
+    const schemaScript = document.createElement('script');
+    schemaScript.id = 'clinic-schema';
+    schemaScript.type = 'application/ld+json';
+    schemaScript.textContent = JSON.stringify(schema);
+    document.head.appendChild(schemaScript);
+  }, [clinicSettings, currentPath]);
+
+  useEffect(() => {
     if (!isAuthChecking && currentPath.startsWith('/admin') && !adminUser) {
       setIsAdminModalOpen(true);
     }
