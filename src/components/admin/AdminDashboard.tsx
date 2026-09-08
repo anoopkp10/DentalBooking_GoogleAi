@@ -90,6 +90,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<AdminTab>(() => adminTabFromPath(window.location.pathname));
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isDbModalOpen, setIsDbModalOpen] = useState(false);
+  const displayClinicName = clinicSettings.clinic_name?.trim() || 'DigeGain Dental';
 
   useEffect(() => {
     const handlePopState = () => setActiveTab(adminTabFromPath(window.location.pathname));
@@ -128,7 +129,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center text-slate-900 font-bold">
             L
           </div>
-          <span className="font-display font-bold text-sm tracking-tight">Staff Portal</span>
+          <span className="font-display font-bold text-sm tracking-tight">{displayClinicName}</span>
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -159,7 +160,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
                 <div>
                   <h1 className="font-display font-extrabold text-white text-base tracking-tight leading-none">
-                    Lumina Admin
+                    {displayClinicName}
                   </h1>
                   <p className="text-[11px] text-teal-400 font-semibold mt-1">
                     Dental Practice Portal
