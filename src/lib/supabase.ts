@@ -327,6 +327,26 @@ export async function createAppointment(
   return newAppointment;
 }
 
+export async function sendAppointmentNotifications(
+  appointment: Appointment,
+  clinicSettings: ClinicSettings
+): Promise<void> {
+  if (!isSupabaseConfigured) {
+    return;
+  }
+
+  const { error } = await supabase.functions.invoke('send-appointment-notifications', {
+    body: {
+      appointment,
+      clinicSettings,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function updateAppointmentStatus(id: string, status: Appointment['status']): Promise<void> {
   if (isSupabaseConfigured) {
     try {

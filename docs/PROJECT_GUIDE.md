@@ -34,6 +34,9 @@ The application is a client-rendered React single-page application. Public and a
 
 - Supabase JavaScript client
 - Supabase Auth for configured production authentication
+- Supabase Edge Functions for server-side notifications
+- Resend for appointment confirmation email
+- WhatsApp Cloud API for appointment confirmation messages
 - Browser `localStorage` fallback when Supabase is not configured or unavailable
 - PostgreSQL through Supabase
 
@@ -181,6 +184,51 @@ VITE_SUPABASE_ANON_KEY=your-public-anon-key
 Only use the Supabase public anonymous key in the frontend. Never expose a Supabase service-role key, database password, or other private secret in client code or GitHub.
 
 If these variables are absent, the application enters interactive sandbox mode and persists demo data in browser `localStorage`.
+
+## 8.1 Appointment Email and WhatsApp Notifications
+
+After a public appointment is saved, `src/App.tsx` invokes the Supabase Edge Function `send-appointment-notifications`. The function sends:
+
+- A confirmation email through Resend
+- A WhatsApp template message through the WhatsApp Cloud API
+
+The notification call is best-effort. A provider failure is logged and does not undo the saved appointment.
+
+Deploy the function with the Supabase CLI:
+
+```powershell
+supabase functions deploy send-appointment-notifications
+```
+
+Set these secrets in the Supabase project. Do not put them in Vite environment variables or frontend code:
+
+```text
+RESEND_API_KEY
+RESEND_FROM_EMAIL
+WHATSAPP_ACCESS_TOKEN
+WHATSAPP_PHONE_NUMBER_ID
+WHATSAPP_TEMPLATE_NAME
+WHATSAPP_TEMPLATE_LANGUAGE   # optional; defaults to en_US
+```
+
+`RESEND_FROM_EMAIL` must use a verified sender/domain in Resend. The WhatsApp template must be approved in Meta Business Manager. Its body must contain six text placeholders in this order:
+
+```text
+1. Patient name
+2. Clinic name
+3. Appointment date
+4. Appointment time
+5. Service name
+6. Clinic address
+```
+
+The recipient phone number is normalized to digits from the booking form. For international WhatsApp delivery, patients should enter a country code.
+
+The Edge Function source is:
+
+```text
+supabase/functions/send-appointment-notifications/index.ts
+```
 
 ## 8. Supabase Setup
 
