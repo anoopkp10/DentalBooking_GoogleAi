@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -56,6 +56,8 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
 }) => {
   // Step State: 1 = Service, 2 = Date & Time, 3 = Patient Details, 4 = Success
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const continueButtonRef = useRef<HTMLButtonElement>(null);
+  const dateTimeHeadingRef = useRef<HTMLHeadingElement>(null);
 
   // Active Services
   const activeServices = useMemo(() => services.filter((s) => s.is_active), [services]);
@@ -64,6 +66,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
   const [selectedService, setSelectedService] = useState<DentalService | null>(
     preSelectedService || activeServices[0] || null
   );
+  const previousServiceId = useRef(selectedService?.id);
 
   // Sync preSelectedService from outside if passed
   useEffect(() => {
@@ -126,6 +129,17 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
   useEffect(() => {
     setSelectedSlot(null);
   }, [selectedDateStr, selectedService]);
+
+  useEffect(() => {
+    const serviceId = selectedService?.id;
+    if (currentStep === 1 && serviceId && serviceId !== previousServiceId.current) {
+      continueButtonRef.current?.focus();
+    }
+    if (currentStep === 2) {
+      dateTimeHeadingRef.current?.focus();
+    }
+    previousServiceId.current = serviceId;
+  }, [currentStep, selectedService]);
 
   // Validate step 3
   const validatePatientForm = () => {
@@ -454,6 +468,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                     disabled={!selectedService}
                     onClick={() => setCurrentStep(2)}
                     id="step1-continue-btn"
+                    ref={continueButtonRef}
                     className="inline-flex items-center gap-2 px-7 py-3.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition-all cursor-pointer"
                   >
                     <span>Continue to Date & Time</span>
@@ -470,7 +485,13 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-3">
                   <div>
                     <span className="text-xs text-teal-700 font-bold uppercase tracking-wider">Step 2 of 3</span>
-                    <h3 className="text-xl font-bold text-slate-900">Select Date & Time</h3>
+                    <h3
+                      ref={dateTimeHeadingRef}
+                      tabIndex={-1}
+                      className="text-xl font-bold text-slate-900 focus:outline-none"
+                    >
+                      Select Date & Time
+                    </h3>
                   </div>
                   <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
                     <div>
