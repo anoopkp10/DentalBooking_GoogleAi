@@ -15,10 +15,16 @@ import {
   Plus,
   X,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  Download
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { Appointment, DentalService } from '../../types/database';
 import { formatFriendlyDate } from '../../utils/availability';
+
+/** Formats a Date to a local YYYY-MM-DD string (timezone-safe, unlike toISOString). */
+const toLocalDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 interface AppointmentsTabProps {
   appointments: Appointment[];
@@ -35,6 +41,14 @@ export const AppointmentsTab: React.FC<AppointmentsTabProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Date scope: 'all' shows everything, 'month' a single month, 'range' a start/end window
+  const [dateFilterMode, setDateFilterMode] = useState<'all' | 'month' | 'range'>('all');
+  const [filterMonth, setFilterMonth] = useState(() => toLocalDateStr(new Date()).slice(0, 7));
+  const [filterStartDate, setFilterStartDate] = useState(() => {
+    const now = new Date();
+    return toLocalDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+  });
+  const [filterEndDate, setFilterEndDate] = useState(() => toLocalDateStr(new Date()));
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
 
@@ -56,6 +70,16 @@ export const AppointmentsTab: React.FC<AppointmentsTabProps> = ({
         return false;
       }
 
+      // Date scope filter (appointment_date is stored as YYYY-MM-DD, so a
+      // lexical string comparison is a chronological comparison)
+      if (dateFilterMode === 'month' && filterMonth && apt.appointment_date.slice(0, 7) !== filterMonth) {
+        return false;
+      }
+      if (dateFilterMode === 'range') {
+        if (filterStartDate && apt.appointment_date < filterStartDate) return false;
+        if (filterEndDate && apt.appointment_date > filterEndDate) return false;
+      }
+
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -69,7 +93,70 @@ export const AppointmentsTab: React.FC<AppointmentsTabProps> = ({
 
       return true;
     });
-  }, [appointments, statusFilter, searchQuery]);
+  }, [appointments, statusFilter, searchQuery, dateFilterMode, filterMonth, filterStartDate, filterEndDate]);
+
+  // Totals for the filtered set (cancelled bookings carry no revenue)
+  const activeAppointments = useMemo(
+    () => filteredAppointments.filter((apt) => apt.status !== 'cancelled'),
+    [filteredAppointments]
+  );
+  const totalAmount = useMemo(
+    () => activeAppointments.reduce((sum, apt) => sum + Number(apt.service?.price ?? 0), 0),
+    [activeAppointments]
+  );
+
+  // File name reflects the active date scope
+  const exportFileStamp = dateFilterMode === 'month'
+    ? filterMonth
+    : dateFilterMode === 'range'
+      ? `${filterStartDate || 'start'}_to_${filterEndDate || 'today'}`
+      : 'all';
+
+  const handleExportExcel = () => {
+    if (filteredAppointments.length === 0) return;
+
+    const rows = filteredAppointments
+      .slice()
+      .sort((a, b) => `${a.appointment_date} ${a.start_time}`.localeCompare(`${b.appointment_date} ${b.start_time}`))
+      .map((apt) => ({
+        'Date': apt.appointment_date,
+        'Time': `${apt.start_time.slice(0, 5)} - ${apt.end_time.slice(0, 5)}`,
+        'Patient Name': apt.full_name,
+        'Email': apt.email,
+        'Phone': apt.phone,
+        'Treatment': apt.service?.name || 'General Dental Service',
+        'Duration (mins)': apt.service?.duration_minutes ?? '',
+        'Amount (USD)': Number(apt.service?.price ?? 0),
+        'Status': apt.status,
+        'Notes': apt.notes || '',
+      }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    worksheet['!cols'] = [
+      { wch: 12 }, { wch: 14 }, { wch: 24 }, { wch: 28 }, { wch: 18 },
+      { wch: 28 }, { wch: 14 }, { wch: 13 }, { wch: 12 }, { wch: 34 },
+    ];
+
+    // Total row appended under the data (excludes cancelled bookings)
+    XLSX.utils.sheet_add_aoa(worksheet, [
+      [],
+      ['', '', '', '', '', '', 'Total (excl. cancelled)', totalAmount],
+    ], { origin: -1 });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Appointments');
+    XLSX.writeFile(workbook, `appointments_${exportFileStamp}.xlsx`);
+  };
+
+  // Keep the range valid while the admin picks dates
+  const handleRangeStartChange = (value: string) => {
+    setFilterStartDate(value);
+    if (value && filterEndDate && value > filterEndDate) setFilterEndDate(value);
+  };
+  const handleRangeEndChange = (value: string) => {
+    setFilterEndDate(value);
+    if (value && filterStartDate && value < filterStartDate) setFilterStartDate(value);
+  };
 
   const handleCreateManual = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,6 +288,78 @@ export const AppointmentsTab: React.FC<AppointmentsTabProps> = ({
             </button>
           ))}
         </div>
+
+        {/* Date Scope Filter & Excel Export */}
+        <div className="w-full flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-teal-600" />
+              View
+            </span>
+            {([
+              ['all', 'All Dates'],
+              ['month', 'By Month'],
+              ['range', 'Date Range'],
+            ] as const).map(([mode, label]) => (
+              <button
+                key={mode}
+                onClick={() => setDateFilterMode(mode)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  dateFilterMode === mode
+                    ? 'bg-teal-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+
+            {dateFilterMode === 'month' && (
+              <input
+                type="month"
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+              />
+            )}
+
+            {dateFilterMode === 'range' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={filterStartDate}
+                  max={filterEndDate || undefined}
+                  onChange={(e) => handleRangeStartChange(e.target.value)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                />
+                <span className="text-xs text-slate-400 font-semibold">to</span>
+                <input
+                  type="date"
+                  value={filterEndDate}
+                  min={filterStartDate || undefined}
+                  onChange={(e) => handleRangeEndChange(e.target.value)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">
+              <span className="font-bold text-slate-900">{filteredAppointments.length}</span> shown • Revenue{' '}
+              <span className="font-bold text-teal-700">${totalAmount.toFixed(0)}</span>{' '}
+              <span className="text-slate-400">(excl. cancelled)</span>
+            </span>
+            <button
+              onClick={handleExportExcel}
+              disabled={filteredAppointments.length === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export Excel</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Appointments Table Card */}
@@ -209,7 +368,7 @@ export const AppointmentsTab: React.FC<AppointmentsTabProps> = ({
           <div className="text-center py-16 text-slate-400">
             <Calendar className="w-10 h-10 mx-auto mb-2 text-slate-300" />
             <p className="text-sm font-bold text-slate-700">No appointments found</p>
-            <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or status filter.</p>
+            <p className="text-xs text-slate-400 mt-1">Try adjusting your search, status, or date filter.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
