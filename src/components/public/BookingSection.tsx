@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -27,6 +27,7 @@ import {
   TimeSlot,
   BookingFormData
 } from '../../types/database';
+import { isValidEmail, isValidMobileNumber } from '../../utils/validation';
 import {
   generateAvailableSlots,
   formatFriendlyDate,
@@ -58,6 +59,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const continueButtonRef = useRef<HTMLButtonElement>(null);
   const dateTimeHeadingRef = useRef<HTMLHeadingElement>(null);
+  const step2ContinueButtonRef = useRef<HTMLButtonElement>(null);
 
   // Active Services
   const activeServices = useMemo(() => services.filter((s) => s.is_active), [services]);
@@ -130,7 +132,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     setSelectedSlot(null);
   }, [selectedDateStr, selectedService]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const serviceId = selectedService?.id;
     if (currentStep === 1 && serviceId && serviceId !== previousServiceId.current) {
       continueButtonRef.current?.focus();
@@ -141,14 +143,73 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     previousServiceId.current = serviceId;
   }, [currentStep, selectedService]);
 
+  const handleServiceSelect = (service: DentalService) => {
+    setSelectedService(service);
+    requestAnimationFrame(() => continueButtonRef.current?.focus());
+  };
+
+  const handleContinueToDateTime = () => {
+    setCurrentStep(2);
+    requestAnimationFrame(() => dateTimeHeadingRef.current?.focus());
+  };
+
+  const handleSlotSelect = (slot: TimeSlot) => {
+    setSelectedSlot(slot);
+    // Choosing a slot enables the step 2 continue action, so move focus to it
+    // (mirrors handleServiceSelect behavior on step 1).
+    requestAnimationFrame(() => step2ContinueButtonRef.current?.focus());
+  };
+
+  // Single-field validators shared by submit, blur, and live-error clearing
+  const validateField = (field: 'email' | 'phone', value: string): string | null => {
+    if (field === 'email') {
+      if (!value.trim()) return 'Please enter your email address.';
+      if (!isValidEmail(value)) return 'Please enter a valid email address (e.g. name@example.com).';
+      return null;
+    }
+    if (!value.trim()) return 'Please enter your mobile number.';
+    if (!isValidMobileNumber(value)) {
+      return 'Please enter a valid mobile number with 7-15 digits (e.g. +1 555 000 0000).';
+    }
+    return null;
+  };
+
   // Validate step 3
   const validatePatientForm = () => {
     const errors: Record<string, string> = {};
     if (!fullName.trim()) errors.fullName = 'Please enter your full legal name.';
-    if (!email.trim() || !email.includes('@')) errors.email = 'Please enter a valid email address.';
-    if (!phone.trim() || phone.trim().length < 7) errors.phone = 'Please enter a valid phone number.';
+    const emailError = validateField('email', email);
+    if (emailError) errors.email = emailError;
+    const phoneError = validateField('phone', phone);
+    if (phoneError) errors.phone = phoneError;
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const handleContactChange = (field: 'email' | 'phone', value: string) => {
+    if (field === 'email') setEmail(value);
+    else setPhone(value);
+    // Once a field has an error, re-check on every keystroke so the message
+    // disappears the moment the entry becomes valid.
+    setFormErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      const error = validateField(field, value);
+      if (error) next[field] = error;
+      else delete next[field];
+      return next;
+    });
+  };
+
+  const handleContactBlur = (field: 'email' | 'phone', value: string) => {
+    if (!value.trim()) return; // Empty values are reported on submit
+    const error = validateField(field, value);
+    setFormErrors((prev) => {
+      const next = { ...prev };
+      if (error) next[field] = error;
+      else delete next[field];
+      return next;
+    });
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -310,6 +371,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     setEmail('');
     setPhone('');
     setNotes('');
+    setFormErrors({});
   };
 
   return (
@@ -423,7 +485,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                       <div
                         key={service.id}
                         id={`select-service-${service.id}`}
-                        onClick={() => setSelectedService(service)}
+                        onClick={() => handleServiceSelect(service)}
                         className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
                             ? 'border-teal-600 bg-teal-50/40 shadow-md ring-2 ring-teal-600/20'
@@ -466,7 +528,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                 <div className="flex justify-end">
                   <button
                     disabled={!selectedService}
-                    onClick={() => setCurrentStep(2)}
+                    onClick={handleContinueToDateTime}
                     id="step1-continue-btn"
                     ref={continueButtonRef}
                     className="inline-flex items-center gap-2 px-7 py-3.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition-all cursor-pointer"
@@ -646,7 +708,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                                     key={idx}
                                     id={`slot-${slot.startTimeStr}`}
                                     disabled={!slot.available}
-                                    onClick={() => setSelectedSlot(slot)}
+                                    onClick={() => handleSlotSelect(slot)}
                                     className={`p-3 rounded-xl text-xs font-bold border transition-all text-center ${
                                       isSelected
                                         ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
@@ -682,7 +744,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                                     key={idx}
                                     id={`slot-${slot.startTimeStr}`}
                                     disabled={!slot.available}
-                                    onClick={() => setSelectedSlot(slot)}
+                                    onClick={() => handleSlotSelect(slot)}
                                     className={`p-3 rounded-xl text-xs font-bold border transition-all text-center ${
                                       isSelected
                                         ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
@@ -723,6 +785,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                     disabled={!selectedSlot}
                     onClick={() => setCurrentStep(3)}
                     id="step2-continue-btn"
+                    ref={step2ContinueButtonRef}
                     className="inline-flex items-center gap-2 px-7 py-3.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition-all cursor-pointer"
                   >
                     <span>Enter Patient Details</span>
@@ -755,7 +818,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                   </div>
                 )}
 
-                <form onSubmit={handleFormSubmit} className="space-y-6">
+                <form onSubmit={handleFormSubmit} noValidate className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     
                     {/* Full Name */}
@@ -797,8 +860,10 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                           type="email"
                           required
                           id="patient-email"
+                          autoComplete="email"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => handleContactChange('email', e.target.value)}
+                          onBlur={() => handleContactBlur('email', email)}
                           placeholder="alex@example.com"
                           className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${
                             formErrors.email ? 'border-rose-400' : 'border-slate-300'
@@ -823,9 +888,12 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                           type="tel"
                           required
                           id="patient-phone"
+                          autoComplete="tel"
+                          inputMode="tel"
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="(555) 000-0000"
+                          onChange={(e) => handleContactChange('phone', e.target.value)}
+                          onBlur={() => handleContactBlur('phone', phone)}
+                          placeholder="(555) 000-0000 or +1 555 000 0000"
                           className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${
                             formErrors.phone ? 'border-rose-400' : 'border-slate-300'
                           }`}
@@ -834,6 +902,9 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                       {formErrors.phone && (
                         <p className="text-[11px] text-rose-600 mt-1 font-semibold">{formErrors.phone}</p>
                       )}
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        Include your country code for international confirmation messages, e.g. +1 555 000 0000.
+                      </p>
                     </div>
 
                     {/* Service & Price Summary Card */}
