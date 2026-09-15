@@ -187,7 +187,7 @@ If these variables are absent, the application enters interactive sandbox mode a
 
 ## 8.1 Appointment Email and WhatsApp Notifications
 
-After a public appointment is saved, `src/App.tsx` invokes the Supabase Edge Function `send-appointment-notifications`. The function sends:
+After a public appointment is saved, `src/App.tsx` invokes the Supabase Edge Function `send_booking_Email`. The function sends:
 
 - A confirmation email through Resend
 - A WhatsApp template message through the WhatsApp Cloud API
