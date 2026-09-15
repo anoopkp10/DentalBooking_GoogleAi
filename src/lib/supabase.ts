@@ -335,7 +335,7 @@ export async function sendAppointmentNotifications(
     return;
   }
 
-  const { error } = await supabase.functions.invoke('send-appointment-notifications', {
+  const { error } = await supabase.functions.invoke('send_booking_Email', {
     body: {
       appointment,
       clinicSettings,

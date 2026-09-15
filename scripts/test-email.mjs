@@ -109,7 +109,7 @@ if (!supabaseUrl || !anonKey) {
   process.exit(1);
 }
 
-const endpoint = `${supabaseUrl}/functions/v1/send-appointment-notifications`;
+const endpoint = `${supabaseUrl}/functions/v1/send_booking_Email`;
 console.log(`POST ${endpoint}`);
 console.log(`Payload recipient: ${to}`);
 
