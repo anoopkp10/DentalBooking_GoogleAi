@@ -13,7 +13,6 @@ import {
   addBlockedDate,
   removeBlockedDate,
   updateClinicSettings,
-  sendAppointmentNotifications,
   supabase,
   isSupabaseConfigured,
   checkIsAdmin
@@ -198,13 +197,6 @@ export default function App() {
     const newApt = await createAppointment(bookingData);
     // Optimistically update list
     setAppointments((prev) => [newApt, ...prev]);
-
-    try {
-      await sendAppointmentNotifications(newApt, clinicSettings);
-    } catch (err) {
-      // Provider failures must not undo a successfully saved appointment.
-      console.warn('Appointment notifications failed:', err);
-    }
 
     return newApt;
   };

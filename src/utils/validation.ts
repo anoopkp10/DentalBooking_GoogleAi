@@ -14,7 +14,6 @@ export function isValidEmail(value: string): boolean {
 
 /**
  * Strips everything except digits, e.g. "(555) 123-4567" -> "5551234567".
- * Mirrors the digit normalization used by the WhatsApp notification Edge Function.
  */
 export function normalizePhoneDigits(value: string): string {
   return value.replace(/\D/g, '');
