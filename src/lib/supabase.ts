@@ -294,7 +294,13 @@ export async function createAppointment(
 
   if (isSupabaseConfigured) {
     try {
-      const { data: inserted, error } = await supabase
+      // NOTE: intentionally NO .select() after this insert. Requesting the
+      // inserted row back (PostgREST `Prefer: return=representation`) requires
+      // the new row to also be visible under the table's SELECT policies —
+      // which are admin-only (`authenticated`) for appointments. Public
+      // (`anon`) bookings therefore failed with 42501 *after* successfully
+      // inserting. We insert without returning and build the object locally.
+      const { error } = await supabase
         .from('appointments')
         .insert([{
           full_name: data.full_name,
@@ -306,16 +312,13 @@ export async function createAppointment(
           end_time: data.end_time,
           status,
           notes: data.notes || null,
-        }])
-        .select(`
-          *,
-          service:service_id (id, name, duration_minutes, price, is_active)
-        `)
-        .single();
+        }]);
 
-      if (!error && inserted) {
-        return inserted as Appointment;
+      if (!error) {
+        const services = await getServices();
+        return { ...newAppointment, service: services.find((s) => s.id === data.service_id) };
       }
+      console.warn('Supabase appointment insert error:', error);
     } catch (err) {
       console.warn('Supabase createAppointment failed, storing locally:', err);
     }

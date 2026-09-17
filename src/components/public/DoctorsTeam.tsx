@@ -23,7 +23,7 @@ export const DoctorsTeam: React.FC = () => {
   ];
 
   return (
-    <section id="doctors-section" className="py-20 bg-white border-t border-slate-100">
+    <section id="doctors-section" className="py-10 sm:py-12 bg-white border-t border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-3xl mx-auto mb-14">

@@ -27,7 +27,7 @@ export const AboutSection: React.FC = () => {
   ];
 
   return (
-    <section id="about-section" className="py-20 bg-slate-50 relative overflow-hidden">
+    <section id="about-section" className="py-10 sm:py-12 bg-slate-50 relative overflow-hidden">
       {/* Background soft blob */}
       <div className="absolute top-1/2 left-0 w-72 h-72 bg-teal-100/50 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
 

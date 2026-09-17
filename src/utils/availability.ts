@@ -10,10 +10,11 @@ import {
 /**
  * Parses time string (e.g., "08:30:00" or "08:30") and combines with a date (YYYY-MM-DD)
  * to return a valid Date object in local time.
+ * Null/undefined/empty time falls back to midnight so DB nulls never crash the caller.
  */
-export function combineDateAndTime(dateStr: string, timeStr: string): Date {
+export function combineDateAndTime(dateStr: string, timeStr: string | null | undefined): Date {
   const [year, month, day] = dateStr.split('-').map(Number);
-  const cleanTime = timeStr.trim();
+  const cleanTime = (timeStr ?? '00:00:00').toString().trim() || '00:00:00';
   const parts = cleanTime.split(':').map(Number);
   const hours = parts[0] || 0;
   const minutes = parts[1] || 0;
@@ -99,7 +100,8 @@ export function generateAvailableSlots(params: {
   // Find business hours for this weekday
   const daySchedule = businessHoursList.find((bh) => Number(bh.weekday) === weekday);
 
-  if (!daySchedule || !daySchedule.is_open) {
+  // A day marked open but missing start/end times is treated as closed (misconfigured row)
+  if (!daySchedule || !daySchedule.is_open || !daySchedule.start_time || !daySchedule.end_time) {
     return {
       isClosed: true,
       isBlocked: false,
@@ -119,9 +121,14 @@ export function generateAvailableSlots(params: {
   // Minimum booking time threshold
   const earliestAllowedBookingTime = new Date(now.getTime() + bookingNoticeHours * 60 * 60 * 1000);
 
-  // 4. Parse Existing Active Appointments for this Day (Ignore 'cancelled')
+  // 4. Parse Existing Active Appointments for this Day (Ignore 'cancelled' and rows with missing times)
   const activeDayAppointments = (existingAppointments || [])
-    .filter((apt) => apt.appointment_date === selectedDateStr && apt.status !== 'cancelled')
+    .filter((apt) =>
+      apt.appointment_date === selectedDateStr &&
+      apt.status !== 'cancelled' &&
+      apt.start_time &&
+      apt.end_time
+    )
     .map((apt) => {
       const start = combineDateAndTime(apt.appointment_date, apt.start_time);
       const end = combineDateAndTime(apt.appointment_date, apt.end_time);

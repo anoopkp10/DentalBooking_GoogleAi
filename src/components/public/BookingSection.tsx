@@ -375,7 +375,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
   };
 
   return (
-    <section id="booking-section" className="py-20 bg-slate-100/70 relative">
+    <section id="booking-section" className="py-10 sm:py-12 bg-slate-100/70 relative">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Title & Badge */}
