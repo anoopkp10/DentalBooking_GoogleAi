@@ -27,9 +27,11 @@ export const Hero: React.FC<HeroProps> = ({
         referrerPolicy="no-referrer"
       />
 
-      {/* Dark gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-slate-950/25" />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-slate-950/20" />
+      {/* Lightened gradient overlay for a brighter hero */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/55 via-slate-900/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/45 via-transparent to-slate-900/10" />
+      {/* Soft white scrim behind the text block for black-text readability */}
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full lg:w-3/5 h-full bg-white/15 backdrop-blur-[2px]" />
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 w-full">
@@ -49,7 +51,7 @@ export const Hero: React.FC<HeroProps> = ({
           </h1>
 
           {/* Subheading */}
-          <p className="text-lg sm:text-xl text-black font-normal leading-relaxed mb-8 max-w-xl">
+          <p className="text-lg sm:text-xl text-black font-medium leading-relaxed mb-8 max-w-xl drop-shadow-sm">
             Experience stress-free dentistry designed around your comfort. From routine preventative
             cleanings to advanced cosmetic smile transformations, our board-certified team delivers
             precision care using non-invasive technology.
