@@ -51,7 +51,7 @@ export const Hero: React.FC<HeroProps> = ({
           </h1>
 
           {/* Subheading */}
-          <p className="text-lg sm:text-xl text-black font-medium leading-relaxed mb-8 max-w-xl drop-shadow-sm">
+          <p className="text-lg sm:text-xl text-white font-medium leading-relaxed mb-8 max-w-xl drop-shadow-sm">
             Experience stress-free dentistry designed around your comfort. From routine preventative
             cleanings to advanced cosmetic smile transformations, our board-certified team delivers
             precision care using non-invasive technology.
