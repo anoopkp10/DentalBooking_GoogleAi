@@ -43,13 +43,13 @@ export const Hero: React.FC<HeroProps> = ({
           {/* Main Display Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12] mb-6">
             World-class dental care in a{' '}
-            <span className="bg-gradient-to-r from-teal-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent">
+            <span style={{ color: '#D2B48C' }}>
               calm, modern studio.
             </span>
           </h1>
 
           {/* Subheading */}
-          <p className="text-lg sm:text-xl text-slate-200 font-normal leading-relaxed mb-8 max-w-xl">
+          <p className="text-lg sm:text-xl text-black font-normal leading-relaxed mb-8 max-w-xl">
             Experience stress-free dentistry designed around your comfort. From routine preventative
             cleanings to advanced cosmetic smile transformations, our board-certified team delivers
             precision care using non-invasive technology.
