@@ -60,6 +60,8 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
   const continueButtonRef = useRef<HTMLButtonElement>(null);
   const dateTimeHeadingRef = useRef<HTMLHeadingElement>(null);
   const step2ContinueButtonRef = useRef<HTMLButtonElement>(null);
+  const patientHeadingRef = useRef<HTMLHeadingElement>(null);
+  const confirmedBadgeRef = useRef<HTMLSpanElement>(null);
 
   // Active Services
   const activeServices = useMemo(() => services.filter((s) => s.is_active), [services]);
@@ -139,6 +141,12 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     }
     if (currentStep === 2) {
       dateTimeHeadingRef.current?.focus();
+    }
+    if (currentStep === 3) {
+      patientHeadingRef.current?.focus();
+    }
+    if (currentStep === 4) {
+      confirmedBadgeRef.current?.focus();
     }
     previousServiceId.current = serviceId;
   }, [currentStep, selectedService]);
@@ -801,7 +809,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-3">
                   <div>
                     <span className="text-xs text-teal-700 font-bold uppercase tracking-wider">Step 3 of 3</span>
-                    <h3 className="text-xl font-bold text-slate-900">Patient Details & Confirmation</h3>
+                    <h3 ref={patientHeadingRef} tabIndex={-1} className="text-xl font-bold text-slate-900 focus:outline-none">Patient Details & Confirmation</h3>
                   </div>
                   <div className="bg-teal-50/80 px-4 py-2 rounded-xl border border-teal-200 text-xs">
                     <p className="font-bold text-teal-900">{selectedService.name}</p>
@@ -984,7 +992,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
 
-                <span className="text-xs font-bold uppercase tracking-wider text-teal-700 px-3 py-1 bg-teal-50 rounded-full border border-teal-200">
+                <span ref={confirmedBadgeRef} tabIndex={-1} className="text-xs font-bold uppercase tracking-wider text-teal-700 px-3 py-1 bg-teal-50 rounded-full border border-teal-200 focus:outline-none">
                   Appointment Confirmed
                 </span>
 
